@@ -1,6 +1,9 @@
 import { Formik, Field } from 'formik';
 import { Wrapper, Error, LabelName, Button } from './PhoneBook.styled';
+import { useDispatch, useSelector } from 'react-redux';
 import * as Yup from 'yup';
+import toast from 'react-hot-toast';
+import { addContacts } from 'Redux/contactsSlice';
 
 const SignupSchema = Yup.object().shape({
   name: Yup.string().min(3, 'Too Short!').required('Required'),
@@ -9,7 +12,12 @@ const SignupSchema = Yup.object().shape({
     .required('Required'),
 });
 
-export const PhoneBook = ({ onAdd }) => {
+export const PhoneBook = () => {
+  const value = useSelector(getContacts);
+  function getContacts(state) {
+    return state.contacts.contacts;
+  }
+  const dispatch = useDispatch();
   return (
     <div>
       <Formik
@@ -19,8 +27,16 @@ export const PhoneBook = ({ onAdd }) => {
         }}
         validationSchema={SignupSchema}
         onSubmit={(values, actions) => {
-          onAdd(values);
-          actions.resetForm();
+          const existingContact = value.some(
+            contact => contact.name.toLowerCase() === values.name.toLowerCase()
+          );
+          if (existingContact) {
+            toast.error('Contact already exists');
+          } else {
+            toast.success('Contact ADD');
+            dispatch(addContacts(values));
+            actions.resetForm();
+          }
         }}
       >
         <Wrapper>
